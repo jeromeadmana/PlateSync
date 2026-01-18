@@ -67,84 +67,48 @@ const ServerDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div style={{
-        background: 'white',
-        padding: '1.5rem',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
+      <div className="bg-white px-6 py-6 shadow-sm flex justify-between items-center">
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#333' }}>Server Dashboard</h1>
-          <p style={{ margin: '0.25rem 0 0', color: '#666' }}>Welcome, {user?.name}</p>
+          <h1 className="text-3xl font-bold text-gray-800">Server Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome, {user?.name}</p>
         </div>
         <button
           onClick={handleLogout}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
+          className="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
         >
           Clock Out
         </button>
       </div>
 
-      <div style={{ padding: '2rem' }}>
+      <div className="p-8">
         {/* Pending Reviews */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Tables Ready to Order ({pendingCarts.length})
           </h2>
 
           {pendingCarts.length === 0 ? (
-            <div style={{
-              background: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
+            <div className="bg-white p-8 rounded-lg text-center text-gray-400">
               No tables waiting for service
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {pendingCarts.map(cart => (
                 <div
                   key={cart.id}
-                  style={{
-                    background: 'white',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    border: '2px solid #ff9800'
-                  }}
+                  className="bg-white p-6 rounded-lg shadow-md border-2 border-orange-500"
                 >
-                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#ff9800' }}>
+                  <h3 className="text-xl font-bold text-orange-500 mb-2">
                     Table {cart.table_id}
                   </h3>
-                  <p style={{ margin: '0 0 1rem 0', color: '#666' }}>
+                  <p className="text-gray-600 mb-4">
                     {cart.items?.length || 0} items - ${cart.total_amount.toFixed(2)}
                   </p>
                   <button
                     onClick={() => handleViewCart(cart.id)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
+                    className="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
                   >
                     Review Order
                   </button>
@@ -156,46 +120,31 @@ const ServerDashboard: React.FC = () => {
 
         {/* Active Orders */}
         <div>
-          <h2 style={{ marginBottom: '1rem' }}>Active Orders ({activeOrders.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Active Orders ({activeOrders.length})
+          </h2>
 
           {activeOrders.length === 0 ? (
-            <div style={{
-              background: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
+            <div className="bg-white p-8 rounded-lg text-center text-gray-400">
               No active orders
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeOrders.map(order => (
                 <div
                   key={order.id}
-                  style={{
-                    background: 'white',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
+                  className="bg-white p-6 rounded-lg shadow-md"
                 >
-                  <h3 style={{ margin: '0 0 0.5rem 0' }}>Order #{order.order_number}</h3>
-                  <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>
+                  <h3 className="text-lg font-bold mb-1">
+                    Order #{order.order_number}
+                  </h3>
+                  <p className="text-gray-600 mb-1">
                     Table {order.table_number}
                   </p>
-                  <p style={{ margin: 0, color: '#666' }}>
+                  <p className="text-gray-600 mb-3">
                     {order.items.length} items - ${order.total_amount.toFixed(2)}
                   </p>
-                  <div style={{
-                    marginTop: '1rem',
-                    padding: '0.5rem',
-                    background: '#fff3cd',
-                    borderRadius: '4px',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#856404'
-                  }}>
+                  <div className="px-3 py-2 bg-yellow-100 text-yellow-800 rounded text-sm font-semibold text-center">
                     Status: {order.status}
                   </div>
                 </div>
@@ -207,56 +156,31 @@ const ServerDashboard: React.FC = () => {
 
       {/* Cart Review Modal */}
       {selectedCart && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{ marginTop: 0 }}>Review Order - Table {selectedCart.table_id}</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-xl p-8 max-w-2xl w-full max-h-[80vh] overflow-auto">
+            <h2 className="text-2xl font-bold mb-6">
+              Review Order - Table {selectedCart.table_id}
+            </h2>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div className="space-y-3 mb-6">
               {selectedCart.items.map((item) => (
-                <div key={item.id} style={{
-                  padding: '1rem',
-                  background: '#f9f9f9',
-                  borderRadius: '6px',
-                  marginBottom: '0.75rem'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <strong>{item.name}</strong>
-                    <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
+                <div key={item.id} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <strong className="text-lg">{item.name}</strong>
+                    <span className="font-semibold text-indigo-600">
+                      ${(item.unit_price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                  <div className="text-sm text-gray-600">
                     Quantity: {item.quantity} × ${item.unit_price.toFixed(2)}
                   </div>
                   {item.modifiers && item.modifiers.length > 0 && (
-                    <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
+                    <div className="text-sm text-gray-600 mt-1">
                       Modifiers: {item.modifiers.map(mod => mod.name).join(', ')}
                     </div>
                   )}
                   {item.special_instructions && (
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#ff9800',
-                      marginTop: '0.25rem',
-                      fontStyle: 'italic'
-                    }}>
+                    <div className="text-sm text-orange-600 mt-1 italic">
                       Note: {item.special_instructions}
                     </div>
                   )}
@@ -264,47 +188,32 @@ const ServerDashboard: React.FC = () => {
               ))}
             </div>
 
-            <div style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              marginBottom: '1.5rem',
-              padding: '1rem',
-              background: '#f0f0f0',
-              borderRadius: '6px'
-            }}>
+            <div className="text-xl font-bold mb-6 p-4 bg-gray-100 rounded-lg">
               Total: ${selectedCart.total_amount.toFixed(2)}
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className="flex gap-4">
               <button
                 onClick={() => setSelectedCart(null)}
                 disabled={isLoading}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  background: '#e0e0e0',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  cursor: isLoading ? 'not-allowed' : 'pointer'
-                }}
+                className={`
+                  flex-1 py-3 bg-gray-200 rounded-lg font-medium
+                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}
+                  transition-colors
+                `}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitToKitchen}
                 disabled={isLoading}
-                style={{
-                  flex: 2,
-                  padding: '1rem',
-                  background: isLoading ? '#999' : '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: isLoading ? 'not-allowed' : 'pointer'
-                }}
+                className={`
+                  flex-[2] py-3 text-white rounded-lg font-semibold transition-colors
+                  ${isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600'
+                  }
+                `}
               >
                 {isLoading ? 'Submitting...' : 'Submit to Kitchen'}
               </button>

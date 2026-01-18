@@ -78,33 +78,16 @@ const CustomerKiosk: React.FC = () => {
   const cartItemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div style={{
-        background: 'white',
-        padding: '1.5rem',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#333' }}>
+      <div className="bg-white px-6 py-6 shadow-sm sticky top-0 z-50">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-800">
             Welcome! Table {tableId}
           </h1>
           <button
             onClick={() => setShowCart(!showCart)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: '#667eea',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              position: 'relative'
-            }}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md"
           >
             Cart ({cartItemCount}) - ${cartTotal.toFixed(2)}
           </button>
@@ -113,88 +96,47 @@ const CustomerKiosk: React.FC = () => {
 
       {/* Success Message */}
       {showSuccess && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: '#4caf50',
-          color: 'white',
-          padding: '2rem 3rem',
-          borderRadius: '12px',
-          fontSize: '1.5rem',
-          fontWeight: 600,
-          zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-        }}>
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-12 py-8 rounded-xl text-2xl font-semibold z-[1000] shadow-2xl">
           Server has been notified!
         </div>
       )}
 
       {/* Cart Panel */}
       {showCart && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '400px',
-          background: 'white',
-          boxShadow: '-4px 0 12px rgba(0,0,0,0.2)',
-          zIndex: 200,
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0 }}>Your Cart</h2>
+        <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-[200] flex flex-col">
+          <div className="px-6 py-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
             <button
               onClick={() => setShowCart(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                color: '#666'
-              }}
+              className="text-4xl text-gray-500 hover:text-gray-700 leading-none"
             >
               ×
             </button>
           </div>
 
-          <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
+          <div className="flex-1 overflow-auto p-4">
             {cart?.items.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#999', marginTop: '2rem' }}>Your cart is empty</p>
+              <p className="text-center text-gray-400 mt-8">Your cart is empty</p>
             ) : (
               cart?.items.map(item => (
-                <div key={item.id} style={{
-                  padding: '1rem',
-                  background: '#f9f9f9',
-                  borderRadius: '8px',
-                  marginBottom: '0.75rem'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <strong>{item.name}</strong>
-                    <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
+                <div key={item.id} className="p-4 bg-gray-50 rounded-lg mb-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <strong className="text-lg">{item.name}</strong>
+                    <span className="font-semibold text-indigo-600">
+                      ${(item.unit_price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>
+                  <div className="text-sm text-gray-600 mb-2">
                     Quantity: {item.quantity} × ${item.unit_price.toFixed(2)}
                   </div>
                   {item.modifiers && item.modifiers.length > 0 && (
-                    <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>
+                    <div className="text-sm text-gray-600 mb-2">
                       {item.modifiers.map(mod => mod.name).join(', ')}
                     </div>
                   )}
                   <button
                     onClick={() => removeItem(tableNumber, item.id)}
-                    style={{
-                      padding: '0.25rem 0.75rem',
-                      background: '#f44336',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer'
-                    }}
+                    className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                   >
                     Remove
                   </button>
@@ -203,24 +145,20 @@ const CustomerKiosk: React.FC = () => {
             )}
           </div>
 
-          <div style={{ padding: '1.5rem', borderTop: '1px solid #e0e0e0' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
+          <div className="px-6 py-6 border-t border-gray-200">
+            <div className="text-xl font-bold mb-4">
               Total: ${cartTotal.toFixed(2)}
             </div>
             <button
               onClick={handleCallServer}
               disabled={cartItemCount === 0}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                background: cartItemCount === 0 ? '#ccc' : '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                cursor: cartItemCount === 0 ? 'not-allowed' : 'pointer'
-              }}
+              className={`
+                w-full py-4 text-lg font-semibold rounded-lg transition-colors
+                ${cartItemCount === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-500 text-white hover:bg-green-600'
+                }
+              `}
             >
               Call Server
             </button>
@@ -229,43 +167,24 @@ const CustomerKiosk: React.FC = () => {
       )}
 
       {/* Menu Items */}
-      <div style={{ padding: '1.5rem' }}>
+      <div className="p-6">
         {Object.entries(groupedByCategory).map(([catId, items]) => (
-          <div key={catId} style={{ marginBottom: '2rem' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#333' }}>
+          <div key={catId} className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
               {items[0]?.category_id || 'Other Items'}
             </h2>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '1rem'
-            }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {items.filter(item => item.status === 'active').map(item => (
                 <div
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  style={{
-                    background: 'white',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                  }}
+                  className="bg-white rounded-xl p-6 cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
                 >
-                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>{item.name}</h3>
-                  <p style={{ margin: '0 0 1rem 0', color: '#666', fontSize: '0.875rem' }}>
+                  <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {item.description}
                   </p>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#667eea' }}>
+                  <div className="text-xl font-bold text-indigo-600">
                     ${item.base_price.toFixed(2)}
                   </div>
                 </div>
@@ -277,38 +196,19 @@ const CustomerKiosk: React.FC = () => {
 
       {/* Item Detail Modal */}
       {selectedItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 300
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            maxWidth: '500px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{ marginTop: 0 }}>{selectedItem.name}</h2>
-            <p style={{ color: '#666' }}>{selectedItem.description}</p>
-            <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#667eea', marginBottom: '1.5rem' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-xl p-8 max-w-lg w-full max-h-[80vh] overflow-auto">
+            <h2 className="text-2xl font-bold mb-2">{selectedItem.name}</h2>
+            <p className="text-gray-600 mb-4">{selectedItem.description}</p>
+            <div className="text-2xl font-bold text-indigo-600 mb-6">
               ${selectedItem.base_price.toFixed(2)}
             </div>
 
             {selectedItem.modifiers && selectedItem.modifiers.length > 0 && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h3>Modifiers:</h3>
+              <div className="mb-6">
+                <h3 className="font-semibold mb-3">Modifiers:</h3>
                 {selectedItem.modifiers.map(mod => (
-                  <label key={mod.id} style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  <label key={mod.id} className="flex items-center mb-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedModifiers.includes(mod.id)}
@@ -319,35 +219,30 @@ const CustomerKiosk: React.FC = () => {
                           setSelectedModifiers(selectedModifiers.filter(id => id !== mod.id));
                         }
                       }}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
                     />
-                    {' '}{mod.name} (+${mod.extra_price.toFixed(2)})
+                    <span className="ml-3">
+                      {mod.name} (+${mod.extra_price.toFixed(2)})
+                    </span>
                   </label>
                 ))}
               </div>
             )}
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+            <div className="mb-6">
+              <label className="block font-medium mb-2">
                 Special Instructions:
               </label>
               <textarea
                 value={specialInstructions}
                 onChange={(e) => setSpecialInstructions(e.target.value)}
                 placeholder="No onions, extra sauce, etc."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  resize: 'vertical',
-                  minHeight: '80px',
-                  boxSizing: 'border-box'
-                }}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-vertical min-h-[80px]"
               />
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+            <div className="mb-6">
+              <label className="block font-medium mb-2">
                 Quantity:
               </label>
               <input
@@ -355,17 +250,11 @@ const CustomerKiosk: React.FC = () => {
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)}
-                style={{
-                  padding: '0.75rem',
-                  fontSize: '1.125rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  width: '100px'
-                }}
+                className="px-4 py-3 text-lg border-2 border-gray-300 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   setSelectedItem(null);
@@ -373,31 +262,13 @@ const CustomerKiosk: React.FC = () => {
                   setSelectedModifiers([]);
                   setSpecialInstructions('');
                 }}
-                style={{
-                  flex: 1,
-                  padding: '0.875rem',
-                  background: '#e0e0e0',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  cursor: 'pointer'
-                }}
+                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddToCart}
-                style={{
-                  flex: 2,
-                  padding: '0.875rem',
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+                className="flex-[2] py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
               >
                 Add to Cart
               </button>
