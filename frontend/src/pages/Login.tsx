@@ -27,27 +27,14 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '3rem',
-        borderRadius: '12px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        width: '100%',
-        maxWidth: '400px'
-      }}>
-        <h1 style={{ marginBottom: '0.5rem', fontSize: '2rem', color: '#333' }}>PlateSync</h1>
-        <p style={{ marginBottom: '2rem', color: '#666' }}>Initial Device Setup</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
+      <div className="bg-white p-12 rounded-xl shadow-2xl w-full max-w-md">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">PlateSync</h1>
+        <p className="text-gray-600 mb-8">Initial Device Setup</p>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#333' }}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
             </label>
             <input
@@ -56,20 +43,13 @@ const Login: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                boxSizing: 'border-box'
-              }}
+              className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               placeholder="you@example.com"
             />
           </div>
 
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#333' }}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <input
@@ -78,27 +58,13 @@ const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                boxSizing: 'border-box'
-              }}
+              className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div style={{
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              background: '#fee',
-              border: '1px solid #fcc',
-              borderRadius: '6px',
-              color: '#c33'
-            }}>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
             </div>
           )}
@@ -106,28 +72,27 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '0.875rem',
-              fontSize: '1rem',
-              fontWeight: 600,
-              color: 'white',
-              background: isLoading ? '#999' : '#667eea',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s'
-            }}
+            className={`
+              w-full py-3.5 text-base font-semibold text-white rounded-lg
+              transition-all duration-200
+              ${isLoading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800'
+              }
+            `}
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div style={{ marginTop: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '6px' }}>
-          <p style={{ fontSize: '0.875rem', color: '#666', margin: 0 }}>
-            <strong>Test Accounts:</strong><br />
-            Server: server@demo.com<br />
-            Cook: cook@demo.com<br />
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold">Test Accounts:</span>
+            <br />
+            Server: server@demo.com
+            <br />
+            Cook: cook@demo.com
+            <br />
             Password: admin123
           </p>
         </div>
