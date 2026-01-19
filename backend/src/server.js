@@ -6,6 +6,7 @@ import config from './config/index.js';
 import db from './db/index.js';
 import logger from './utils/logger.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { initializeSocket } from './sockets/index.js';
 
 import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
@@ -14,6 +15,8 @@ import orderRoutes from './routes/orders.js';
 
 const app = express();
 const httpServer = createServer(app);
+
+initializeSocket(httpServer);
 
 app.use(cors(config.cors));
 app.use(compression());

@@ -2,6 +2,7 @@ import db from '../db/index.js';
 import cartService from './cartService.js';
 import { ORDER_STATUS, CART_STATUS } from '../config/constants.js';
 import logger from '../utils/logger.js';
+import { emitToKitchen, emitToServers, emitToTable, SOCKET_EVENTS } from '../sockets/index.js';
 
 class OrderService {
   generateOrderNumber(storeId) {
@@ -82,6 +83,10 @@ class OrderService {
 
     logger.info(`Manual order created: ${orderNumber} by server ${serverId}`);
 
+    // Emit socket event to kitchen
+    const order = this.getOrder(orderId);
+    emitToKitchen(storeId, SOCKET_EVENTS.ORDER_NEW, order);
+
     return { orderId, orderNumber, totalAmount };
   }
 
@@ -127,6 +132,15 @@ class OrderService {
     );
 
     logger.info(`Order created from cart ${cartId}: ${orderNumber}`);
+
+    // Emit socket event to kitchen
+    const order = this.getOrder(orderId);
+    emitToKitchen(cart.store_id, SOCKET_EVENTS.ORDER_NEW, order);
+
+    // Emit to customer table that order was submitted
+    if (cart.table_id) {
+      emitToTable(cart.table_id, SOCKET_EVENTS.ORDER_SUBMITTED, { orderId, orderNumber });
+    }
 
     return { orderId, orderNumber };
   }
@@ -212,6 +226,16 @@ class OrderService {
     }
 
     logger.info(`Order ${orderId} status updated: ${status}`);
+
+    // Emit socket events for status changes
+    const updatedOrder = this.getOrder(orderId);
+    emitToKitchen(order.store_id, SOCKET_EVENTS.ORDER_STATUS_CHANGE, updatedOrder);
+    emitToServers(order.store_id, SOCKET_EVENTS.ORDER_STATUS_CHANGE, updatedOrder);
+
+    // Notify customer table when order is ready
+    if (status === ORDER_STATUS.READY && order.table_id) {
+      emitToTable(order.table_id, SOCKET_EVENTS.ORDER_READY, updatedOrder);
+    }
   }
 
   updateOrderItemStatus(orderItemId, status) {
@@ -221,7 +245,7 @@ class OrderService {
     );
 
     const item = db.queryOne(
-      'SELECT order_id FROM order_items WHERE id = ?',
+      'SELECT oi.*, o.store_id FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE oi.id = ?',
       [orderItemId]
     );
 
@@ -252,6 +276,11 @@ class OrderService {
     }
 
     logger.info(`Order item ${orderItemId} status updated: ${status}`);
+
+    // Emit socket event for item status change
+    const order = this.getOrder(item.order_id);
+    emitToKitchen(item.store_id, SOCKET_EVENTS.ORDER_ITEM_STATUS_CHANGE, { orderItemId, status, order });
+    emitToServers(item.store_id, SOCKET_EVENTS.ORDER_ITEM_STATUS_CHANGE, { orderItemId, status, order });
   }
 
   getKitchenOrders(storeId) {

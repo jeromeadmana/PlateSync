@@ -1,6 +1,7 @@
 import db from '../db/index.js';
 import { CART_STATUS } from '../config/constants.js';
 import logger from '../utils/logger.js';
+import { emitToServers, SOCKET_EVENTS } from '../sockets/index.js';
 
 class CartService {
   getActiveCart(tableId) {
@@ -147,6 +148,10 @@ class CartService {
     );
 
     logger.info(`Server called for table ${tableId}, cart ${cart.id}`);
+
+    // Emit socket event to notify servers
+    const cartDetails = this.getCartForReview(cart.id);
+    emitToServers(cart.store_id, SOCKET_EVENTS.CART_READY_FOR_REVIEW, cartDetails);
 
     return cart.id;
   }
