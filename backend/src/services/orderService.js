@@ -24,6 +24,67 @@ class OrderService {
     return `${datePrefix}-${nextNumber}`;
   }
 
+  createManualOrder(storeId, serverId, tableId, items) {
+    if (!items || items.length === 0) {
+      throw new Error('Cannot create order without items');
+    }
+
+    const orderNumber = this.generateOrderNumber(storeId);
+
+    let totalAmount = 0;
+    for (const item of items) {
+      const menuItem = db.queryOne(
+        'SELECT base_price FROM menu_items WHERE id = ?',
+        [item.menuItemId]
+      );
+
+      if (!menuItem) {
+        throw new Error(`Menu item ${item.menuItemId} not found`);
+      }
+
+      let itemTotal = menuItem.base_price * item.quantity;
+
+      if (item.modifiers && item.modifiers.length > 0) {
+        for (const modifier of item.modifiers) {
+          itemTotal += (modifier.extra_price || 0) * item.quantity;
+        }
+      }
+
+      totalAmount += itemTotal;
+    }
+
+    const orderResult = db.run(
+      `INSERT INTO orders (
+        store_id, server_id, table_id, customer_cart_id,
+        order_number, status, total_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [storeId, serverId, tableId, null, orderNumber, ORDER_STATUS.RECEIVED, totalAmount]
+    );
+
+    const orderId = orderResult.lastInsertRowid;
+
+    for (const item of items) {
+      const menuItem = db.queryOne(
+        'SELECT base_price FROM menu_items WHERE id = ?',
+        [item.menuItemId]
+      );
+
+      db.run(
+        `INSERT INTO order_items (
+          order_id, menu_item_id, quantity, unit_price,
+          modifiers_json, special_instructions, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, item.menuItemId, item.quantity, menuItem.base_price,
+         item.modifiers ? JSON.stringify(item.modifiers) : null,
+         item.specialInstructions || null, 'pending']
+      );
+    }
+
+    logger.info(`Manual order created: ${orderNumber} by server ${serverId}`);
+
+    return { orderId, orderNumber, totalAmount };
+  }
+
   createOrderFromCart(cartId, serverId) {
     const cart = cartService.getCartForReview(cartId);
 

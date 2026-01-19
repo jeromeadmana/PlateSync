@@ -37,6 +37,39 @@ router.post('/cart/:cartId/submit', authenticate, requireServerRole, asyncHandle
   });
 }));
 
+router.post('/', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { tableId, items } = req.body;
+
+  if (!tableId) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      message: 'Table ID is required',
+      code: 'MISSING_FIELDS'
+    });
+  }
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      message: 'Items array is required and must not be empty',
+      code: 'MISSING_FIELDS'
+    });
+  }
+
+  const result = orderService.createManualOrder(
+    req.user.storeId,
+    req.user.userId,
+    tableId,
+    items
+  );
+
+  res.status(201).json({
+    success: true,
+    data: result,
+    message: 'Order created and sent to kitchen'
+  });
+}));
+
 router.get('/', authenticate, asyncHandler(async (req, res) => {
   const storeId = req.user.storeId;
   const filters = {
