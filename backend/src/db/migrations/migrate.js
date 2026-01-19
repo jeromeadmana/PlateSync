@@ -24,18 +24,12 @@ async function runMigrations() {
       const filePath = path.join(migrationsDir, file);
       const sql = fs.readFileSync(filePath, 'utf8');
 
-      const statements = sql
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => s.length > 0 && !s.startsWith('--'));
-
-      for (const statement of statements) {
-        try {
-          db.run(statement);
-        } catch (error) {
-          console.error(`Error in statement: ${statement.substring(0, 100)}...`);
-          throw error;
-        }
+      try {
+        // Run entire SQL file as batch for sql.js compatibility
+        db.runBatch(sql);
+      } catch (error) {
+        console.error(`Error in migration file: ${file}`);
+        throw error;
       }
 
       console.log(`✓ Completed: ${file}`);

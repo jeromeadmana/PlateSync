@@ -10,7 +10,7 @@ class Database {
   async initialize() {
     if (this.type === 'sqlite') {
       this.client = sqliteDb;
-      this.client.initialize();
+      await this.client.initialize();
     } else if (this.type === 'supabase') {
       throw new Error('Supabase not implemented yet. Use DATABASE_TYPE=sqlite');
     } else {
@@ -31,6 +31,10 @@ class Database {
 
   run(sql, params = []) {
     return this.client.run(sql, params);
+  }
+
+  runBatch(sql) {
+    return this.client.runBatch(sql);
   }
 
   transaction(callback) {
