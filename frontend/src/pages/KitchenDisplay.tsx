@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { ordersApi } from '../api/orders';
 import type { Order } from '../types';
+import { SOCKET_EVENTS } from '../types';
 
 const KitchenDisplay: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const { user, logout } = useAuth();
+  const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,9 +20,60 @@ const KitchenDisplay: React.FC = () => {
     }
 
     loadOrders();
-    const interval = setInterval(loadOrders, 3000);
-    return () => clearInterval(interval);
   }, [user, navigate]);
+
+  // Socket.IO real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Listen for new orders
+    socket.on(SOCKET_EVENTS.ORDER_NEW, (newOrder: Order) => {
+      console.log('New order received:', newOrder.order_number);
+      setOrders(prev => [newOrder, ...prev]);
+      // Play notification sound (optional)
+      playNotificationSound();
+    });
+
+    // Listen for order status changes
+    socket.on(SOCKET_EVENTS.ORDER_STATUS_CHANGE, (updatedOrder: Order) => {
+      console.log('Order status changed:', updatedOrder.order_number, updatedOrder.status);
+      setOrders(prev =>
+        prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o))
+          .filter(o => o.status === 'received' || o.status === 'preparing')
+      );
+    });
+
+    // Listen for item status changes
+    socket.on(SOCKET_EVENTS.ORDER_ITEM_STATUS_CHANGE, ({ order }: { order: Order }) => {
+      console.log('Order item status changed');
+      setOrders(prev =>
+        prev.map(o => (o.id === order.id ? order : o))
+      );
+    });
+
+    return () => {
+      socket.off(SOCKET_EVENTS.ORDER_NEW);
+      socket.off(SOCKET_EVENTS.ORDER_STATUS_CHANGE);
+      socket.off(SOCKET_EVENTS.ORDER_ITEM_STATUS_CHANGE);
+    };
+  }, [socket, isConnected]);
+
+  const playNotificationSound = () => {
+    // Create a simple beep sound
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    gainNode.gain.value = 0.3;
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  };
 
   const loadOrders = async () => {
     try {

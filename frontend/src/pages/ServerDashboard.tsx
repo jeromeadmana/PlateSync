@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { ordersApi } from '../api/orders';
 import type { Cart, Order } from '../types';
+import { SOCKET_EVENTS } from '../types';
 
 const ServerDashboard: React.FC = () => {
   const [pendingCarts, setPendingCarts] = useState<Cart[]>([]);
@@ -11,6 +13,7 @@ const ServerDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { user, logout } = useAuth();
+  const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,9 +23,51 @@ const ServerDashboard: React.FC = () => {
     }
 
     loadData();
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
   }, [user, navigate]);
+
+  // Socket.IO real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Listen for customer calling server
+    socket.on(SOCKET_EVENTS.CART_READY_FOR_REVIEW, (cart: Cart) => {
+      console.log('Customer called server at table:', cart.table_number);
+      setPendingCarts(prev => [...prev, cart]);
+      // Show browser notification
+      showNotification(`Table ${cart.table_number} needs attention!`);
+    });
+
+    // Listen for order status changes
+    socket.on(SOCKET_EVENTS.ORDER_STATUS_CHANGE, (updatedOrder: Order) => {
+      setActiveOrders(prev =>
+        prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o))
+      );
+    });
+
+    return () => {
+      socket.off(SOCKET_EVENTS.CART_READY_FOR_REVIEW);
+      socket.off(SOCKET_EVENTS.ORDER_STATUS_CHANGE);
+    };
+  }, [socket, isConnected]);
+
+  const showNotification = (message: string) => {
+    // Request browser notification permission if not granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('PlateSync - Server Alert', {
+        body: message,
+        icon: '/favicon.ico'
+      });
+    } else if ('Notification' in window && Notification.permission !== 'denied') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          new Notification('PlateSync - Server Alert', {
+            body: message,
+            icon: '/favicon.ico'
+          });
+        }
+      });
+    }
+  };
 
   const loadData = async () => {
     try {

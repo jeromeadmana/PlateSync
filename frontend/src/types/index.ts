@@ -156,3 +156,18 @@ export interface ApiError {
   code: string;
   details?: Record<string, unknown>;
 }
+
+export const SOCKET_EVENTS = {
+  ORDER_NEW: 'order:new',
+  ORDER_STATUS_CHANGE: 'order:statusChange',
+  ORDER_ITEM_STATUS_CHANGE: 'orderItem:statusChange',
+  CART_READY_FOR_REVIEW: 'cart:readyForReview',
+  ORDER_SUBMITTED: 'order:submitted',
+  ORDER_PREPARING: 'order:preparing',
+  ORDER_READY: 'order:ready',
+  ORDER_SERVED: 'order:served',
+  TABLE_STATUS_CHANGE: 'table:statusChange',
+  MENU_UPDATE: 'menu:update',
+  DEVICE_ONLINE: 'device:online',
+  DEVICE_OFFLINE: 'device:offline'
+} as const;
