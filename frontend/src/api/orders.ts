@@ -50,4 +50,21 @@ export const ordersApi = {
   updateOrderItemStatus: async (itemId: number, status: string): Promise<void> => {
     await apiClient.put(`/orders/items/${itemId}/status`, { status });
   },
+
+  createManualOrder: async (
+    tableId: number,
+    items: Array<{
+      menuItemId: number;
+      quantity: number;
+      modifiers?: Array<{ id: number; name: string; extra_price: number }>;
+      specialInstructions?: string;
+    }>
+  ): Promise<{ orderId: number; orderNumber: string; totalAmount: number }> => {
+    const response = await apiClient.post<ApiResponse<{
+      orderId: number;
+      orderNumber: string;
+      totalAmount: number;
+    }>>('/orders', { tableId, items });
+    return response.data.data;
+  },
 };

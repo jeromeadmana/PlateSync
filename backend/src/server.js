@@ -12,6 +12,8 @@ import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
 import customerRoutes from './routes/customer.js';
 import orderRoutes from './routes/orders.js';
+import paymentRoutes from './routes/payments.js';
+import tableRoutes from './routes/tables.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,6 +45,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/tables', tableRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

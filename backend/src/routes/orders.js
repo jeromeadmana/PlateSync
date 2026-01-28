@@ -37,6 +37,56 @@ router.post('/cart/:cartId/submit', authenticate, requireServerRole, asyncHandle
   });
 }));
 
+// Cart editing endpoints for servers
+router.post('/cart/:cartId/items', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { cartId } = req.params;
+  const { menuItemId, quantity, modifiers, specialInstructions } = req.body;
+
+  if (!menuItemId || !quantity) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      message: 'Menu item ID and quantity are required',
+      code: 'MISSING_FIELDS'
+    });
+  }
+
+  const itemId = cartService.addItem(parseInt(cartId), {
+    menuItemId,
+    quantity,
+    modifiers,
+    specialInstructions
+  });
+
+  res.status(201).json({
+    success: true,
+    data: { itemId },
+    message: 'Item added to cart'
+  });
+}));
+
+router.put('/cart/:cartId/items/:itemId', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+  const { quantity, specialInstructions } = req.body;
+
+  cartService.updateItem(parseInt(itemId), { quantity, specialInstructions });
+
+  res.json({
+    success: true,
+    message: 'Cart item updated'
+  });
+}));
+
+router.delete('/cart/:cartId/items/:itemId', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+
+  cartService.removeItem(parseInt(itemId));
+
+  res.json({
+    success: true,
+    message: 'Item removed from cart'
+  });
+}));
+
 router.post('/', authenticate, requireServerRole, asyncHandler(async (req, res) => {
   const { tableId, items } = req.body;
 
@@ -122,6 +172,56 @@ router.put('/:id/status', authenticate, asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Order status updated'
+  });
+}));
+
+// Order editing endpoints
+router.post('/:orderId/items', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { menuItemId, quantity, modifiers, specialInstructions } = req.body;
+
+  if (!menuItemId || !quantity) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      message: 'Menu item ID and quantity are required',
+      code: 'MISSING_FIELDS'
+    });
+  }
+
+  const itemId = orderService.addItemToOrder(parseInt(orderId), {
+    menuItemId,
+    quantity,
+    modifiers,
+    specialInstructions
+  });
+
+  res.status(201).json({
+    success: true,
+    data: { itemId },
+    message: 'Item added to order'
+  });
+}));
+
+router.delete('/:orderId/items/:itemId', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { orderId, itemId } = req.params;
+
+  orderService.removeItemFromOrder(parseInt(orderId), parseInt(itemId));
+
+  res.json({
+    success: true,
+    message: 'Item removed from order'
+  });
+}));
+
+router.put('/:orderId/cancel', authenticate, requireServerRole, asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { reason } = req.body;
+
+  orderService.cancelOrder(parseInt(orderId), reason);
+
+  res.json({
+    success: true,
+    message: 'Order cancelled'
   });
 }));
 

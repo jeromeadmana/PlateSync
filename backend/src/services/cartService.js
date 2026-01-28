@@ -85,20 +85,36 @@ class CartService {
     return result.lastInsertRowid;
   }
 
-  updateItem(cartItemId, quantity) {
+  updateItem(cartItemId, updates) {
     const item = db.queryOne('SELECT * FROM customer_cart_items WHERE id = ?', [cartItemId]);
     if (!item) {
       throw new Error('Cart item not found');
     }
 
-    db.run(
-      'UPDATE customer_cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [quantity, cartItemId]
-    );
+    // Support both old signature (quantity only) and new signature (object with quantity and/or specialInstructions)
+    const quantity = typeof updates === 'number' ? updates : updates.quantity;
+    const specialInstructions = typeof updates === 'object' ? updates.specialInstructions : undefined;
+
+    if (quantity !== undefined && specialInstructions !== undefined) {
+      db.run(
+        'UPDATE customer_cart_items SET quantity = ?, special_instructions = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [quantity, specialInstructions, cartItemId]
+      );
+    } else if (quantity !== undefined) {
+      db.run(
+        'UPDATE customer_cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [quantity, cartItemId]
+      );
+    } else if (specialInstructions !== undefined) {
+      db.run(
+        'UPDATE customer_cart_items SET special_instructions = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [specialInstructions, cartItemId]
+      );
+    }
 
     this.updateCartTotal(item.cart_id);
 
-    logger.info(`Cart item ${cartItemId} updated: quantity = ${quantity}`);
+    logger.info(`Cart item ${cartItemId} updated`);
   }
 
   removeItem(cartItemId) {

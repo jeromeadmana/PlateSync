@@ -310,6 +310,148 @@ class OrderService {
       };
     });
   }
+
+  addItemToOrder(orderId, itemData) {
+    const order = db.queryOne('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Only allow editing if order is in 'received' status
+    if (order.status !== ORDER_STATUS.RECEIVED) {
+      throw new Error('Cannot edit order that is already being prepared');
+    }
+
+    const menuItem = db.queryOne(
+      'SELECT base_price FROM menu_items WHERE id = ?',
+      [itemData.menuItemId]
+    );
+
+    if (!menuItem) {
+      throw new Error(`Menu item ${itemData.menuItemId} not found`);
+    }
+
+    const result = db.run(
+      `INSERT INTO order_items (
+        order_id, menu_item_id, quantity, unit_price,
+        modifiers_json, special_instructions, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        itemData.menuItemId,
+        itemData.quantity,
+        menuItem.base_price,
+        itemData.modifiers ? JSON.stringify(itemData.modifiers) : null,
+        itemData.specialInstructions || null,
+        'pending'
+      ]
+    );
+
+    // Recalculate order total
+    this.recalculateOrderTotal(orderId);
+
+    logger.info(`Item added to order ${orderId}`);
+
+    return result.lastInsertRowid;
+  }
+
+  removeItemFromOrder(orderId, itemId) {
+    const order = db.queryOne('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Only allow editing if order is in 'received' status
+    if (order.status !== ORDER_STATUS.RECEIVED) {
+      throw new Error('Cannot edit order that is already being prepared');
+    }
+
+    const item = db.queryOne(
+      'SELECT * FROM order_items WHERE id = ? AND order_id = ?',
+      [itemId, orderId]
+    );
+
+    if (!item) {
+      throw new Error('Order item not found');
+    }
+
+    // Only allow removing if item is still pending
+    if (item.status !== 'pending') {
+      throw new Error('Cannot remove item that is already being prepared');
+    }
+
+    db.run('DELETE FROM order_items WHERE id = ?', [itemId]);
+
+    // Recalculate order total
+    this.recalculateOrderTotal(orderId);
+
+    logger.info(`Item ${itemId} removed from order ${orderId}`);
+  }
+
+  cancelOrder(orderId, reason) {
+    const order = db.queryOne('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Only allow cancelling if order hasn't been served or paid
+    if (order.status === ORDER_STATUS.SERVED || order.status === ORDER_STATUS.PAID) {
+      throw new Error('Cannot cancel order that has been served or paid');
+    }
+
+    db.run(
+      `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [ORDER_STATUS.CANCELLED, orderId]
+    );
+
+    // Cancel all pending items
+    db.run(
+      `UPDATE order_items SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+       WHERE order_id = ? AND status = 'pending'`,
+      [orderId]
+    );
+
+    logger.info(`Order ${orderId} cancelled. Reason: ${reason || 'Not specified'}`);
+
+    // Emit socket event
+    const updatedOrder = this.getOrder(orderId);
+    emitToKitchen(order.store_id, SOCKET_EVENTS.ORDER_STATUS_CHANGE, updatedOrder);
+    emitToServers(order.store_id, SOCKET_EVENTS.ORDER_STATUS_CHANGE, updatedOrder);
+  }
+
+  recalculateOrderTotal(orderId) {
+    const items = db.query(
+      `SELECT oi.quantity, oi.unit_price, oi.modifiers_json
+       FROM order_items oi
+       WHERE oi.order_id = ? AND oi.status != 'cancelled'`,
+      [orderId]
+    );
+
+    let total = 0;
+    for (const item of items) {
+      let itemTotal = item.quantity * item.unit_price;
+
+      if (item.modifiers_json) {
+        try {
+          const modifiers = JSON.parse(item.modifiers_json);
+          for (const modifier of modifiers) {
+            itemTotal += (modifier.extra_price || 0) * item.quantity;
+          }
+        } catch (e) {
+          logger.error(`Failed to parse modifiers for order item: ${e.message}`);
+        }
+      }
+
+      total += itemTotal;
+    }
+
+    db.run(
+      'UPDATE orders SET total_amount = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [total, orderId]
+    );
+
+    logger.info(`Order ${orderId} total recalculated: ${total}`);
+  }
 }
 
 export default new OrderService();

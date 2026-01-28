@@ -9,11 +9,11 @@ A complete LAN-based restaurant POS system with customer self-ordering tablets, 
 ## 🚀 Current Status: Core Features Complete! ✅
 
 **Backend:** ✅ 100% Complete with Socket.IO real-time
-**Frontend:** ✅ 90% Complete (Customer, Server, Kitchen working)
+**Frontend:** ✅ 95% Complete (Customer, Server, Kitchen, Cashier working)
 **Real-Time:** ✅ WebSocket integration complete
-**Status:** Ready for testing and demo
+**Status:** Ready for production testing
 
-**Progress:** 83% Complete
+**Progress:** 90% Complete
 
 ---
 
@@ -41,14 +41,16 @@ npm run dev      # Runs on http://localhost:5173
 
 ### Access the System
 
-**Customer Kiosk:** http://localhost:5173/table/1
-**Login Page:** http://localhost:5173/login
+**Customer Kiosk:** http://localhost:5173/kiosk (requires token)
 **Quick Login:** http://localhost:5173/quick-login
+**Server Dashboard:** http://localhost:5173/server
+**Kitchen Display:** http://localhost:5173/kitchen
+**Cashier POS:** http://localhost:5173/cashier
 
-**Test Accounts (all password: `admin123`):**
+**Test Accounts (Company ID: 1, PIN: 1111 for all):**
 - Server: Employee ID `2001`
 - Cook: Employee ID `3001`
-- Admin: Email `admin@demo.com`
+- Cashier: Employee ID `4001`
 
 ---
 
@@ -66,10 +68,12 @@ npm run dev      # Runs on http://localhost:5173
 2. **Server Takes Order** (Server Dashboard)
    - Receives real-time notification
    - Reviews customer cart
-   - Modifies if needed
+   - **Edit cart:** Add/remove items, adjust quantities
    - Submits to kitchen
    - ✨ **Kitchen gets instant notification with sound**
-   - Can create manual orders (phone orders)
+   - **Create manual orders** for phone/walk-in customers
+   - **Edit existing orders** in "received" status
+   - **Cancel orders** with reason tracking
 
 3. **Kitchen Prepares Food** (Kitchen Display)
    - Sees orders appear instantly
@@ -77,6 +81,13 @@ npm run dev      # Runs on http://localhost:5173
    - Updates item status (preparing/ready)
    - ✨ **All screens update in real-time**
    - No page refresh needed
+
+4. **Cashier Processes Payment** (Cashier POS)
+   - View unpaid orders
+   - Process payments (cash, card, mobile)
+   - Calculate tips and change
+   - Print/view receipts
+   - Generate shift reports
 
 ### 🔥 Real-Time Features
 
@@ -97,12 +108,12 @@ npm run dev      # Runs on http://localhost:5173
 | Backend API | ✅ 100% | All endpoints working |
 | Socket.IO Backend | ✅ 100% | Real-time events |
 | Socket.IO Frontend | ✅ 100% | WebSocket integration |
-| Customer Kiosk | ✅ 100% | Self-ordering complete |
-| Server Dashboard | ✅ 100% | Cart review + manual orders |
+| Customer Kiosk | ✅ 100% | Token-based secure ordering |
+| Server Dashboard | ✅ 100% | Cart editing + manual orders + order editing |
 | Kitchen Display | ✅ 100% | Real-time order queue |
-| Authentication | ✅ 100% | Email + Employee ID |
-| Database | ✅ 100% | SQLite3 with 16 tables |
-| Cashier POS | ⏳ 0% | Not started |
+| Cashier POS | ✅ 100% | Payment processing + shift reports |
+| Authentication | ✅ 100% | Email + Employee ID + table tokens |
+| Database | ✅ 100% | SQLite3 with 17 tables |
 | Admin Dashboard | ⏳ 0% | Not started |
 
 ---

@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import QuickLogin from './pages/QuickLogin';
 import ServerDashboard from './pages/ServerDashboard';
 import KitchenDisplay from './pages/KitchenDisplay';
+import CashierPOS from './pages/CashierPOS';
 import './App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             {/* Staff routes */}
             <Route path="/server" element={<ServerDashboard />} />
             <Route path="/kitchen" element={<KitchenDisplay />} />
+            <Route path="/cashier" element={<CashierPOS />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />

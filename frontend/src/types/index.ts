@@ -107,7 +107,8 @@ export interface Order {
   completed_time: string | null;
   server_name?: string;
   table_number?: string;
-  items: OrderItem[];
+  items?: OrderItem[];
+  item_count?: number;
   created_at: string;
   updated_at: string;
 }
