@@ -14,8 +14,10 @@ function App() {
       <SocketProvider>
         <BrowserRouter>
           <Routes>
-            {/* Customer routes (no auth) */}
-            <Route path="/table/:tableId" element={<CustomerKiosk />} />
+            {/* Customer routes (no auth, token-based) */}
+            <Route path="/kiosk" element={<CustomerKiosk />} />
+            {/* Legacy route for backward compatibility */}
+            <Route path="/table/:tableId" element={<Navigate to="/kiosk" replace />} />
 
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />

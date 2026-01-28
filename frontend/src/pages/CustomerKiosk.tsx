@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { customerApi } from '../api/customer';
 import { useCartStore } from '../store/cartStore';
 import type { MenuItem } from '../types';
 
 const CustomerKiosk: React.FC = () => {
-  const { tableId } = useParams<{ tableId: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [token, setToken] = useState<string | null>(null);
+  const [tableNumber, setTableNumber] = useState<string>('');
+  const [storeId, setStoreId] = useState<number>(1); // Default store ID
+  const [tokenExpiry, setTokenExpiry] = useState<string | null>(null);
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -13,36 +20,73 @@ const CustomerKiosk: React.FC = () => {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { cart, loadCart, addItem, removeItem, callServer } = useCartStore();
 
-  const tableNumber = parseInt(tableId || '0', 10);
-
+  // Initialize token from URL or localStorage
   useEffect(() => {
-    if (tableNumber) {
-      loadMenu();
-      loadCart(tableNumber);
+    const urlToken = searchParams.get('token');
+    const storedToken = localStorage.getItem('tableToken');
+    const storedExpiry = localStorage.getItem('tableTokenExpiry');
+    const storedTableNumber = localStorage.getItem('tableNumber');
+    const storedStoreId = localStorage.getItem('storeId');
+
+    // Check if token is expired
+    const isExpired = storedExpiry && new Date(storedExpiry) < new Date();
+
+    if (urlToken) {
+      // Token provided in URL (fresh setup)
+      setToken(urlToken);
+      localStorage.setItem('tableToken', urlToken);
+      // Extract table info from query params if provided
+      const tableNum = searchParams.get('table') || '';
+      const store = searchParams.get('store') || '1';
+      setTableNumber(tableNum);
+      setStoreId(parseInt(store));
+      localStorage.setItem('tableNumber', tableNum);
+      localStorage.setItem('storeId', store);
+    } else if (storedToken && !isExpired) {
+      // Use stored token if not expired
+      setToken(storedToken);
+      setTokenExpiry(storedExpiry);
+      setTableNumber(storedTableNumber || '');
+      setStoreId(parseInt(storedStoreId || '1'));
+    } else {
+      // No valid token - redirect to setup
+      setError('No valid table session found. Please contact staff to set up this tablet.');
+      return;
     }
-  }, [tableNumber]);
+  }, [searchParams]);
+
+  // Load menu and cart when token is available
+  useEffect(() => {
+    if (token && storeId) {
+      loadMenu();
+      loadCart(token);
+    }
+  }, [token, storeId]);
 
   const loadMenu = async () => {
     try {
-      const data = await customerApi.getMenu(tableNumber);
+      const data = await customerApi.getMenu(storeId);
       setMenuItems(data);
+      setError(null);
     } catch (error) {
       console.error('Failed to load menu:', error);
+      setError('Failed to load menu. Please try again.');
     }
   };
 
   const groupedByCategory = menuItems.reduce((acc, item) => {
-    const catId = item.category_id?.toString() || 'uncategorized';
-    if (!acc[catId]) acc[catId] = [];
-    acc[catId].push(item);
+    const catName = item.category_name || 'Other Items';
+    if (!acc[catName]) acc[catName] = [];
+    acc[catName].push(item);
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
   const handleAddToCart = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem || !token) return;
 
     const modifiers = selectedItem.modifiers
       ?.filter(mod => selectedModifiers.includes(mod.id))
@@ -53,29 +97,77 @@ const CustomerKiosk: React.FC = () => {
       })) || [];
 
     try {
-      await addItem(tableNumber, selectedItem.id, quantity, modifiers, specialInstructions);
+      await addItem(token, selectedItem.id, quantity, modifiers, specialInstructions);
       setSelectedItem(null);
       setQuantity(1);
       setSelectedModifiers([]);
       setSpecialInstructions('');
       setShowCart(true);
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error('Failed to add to cart:', error);
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please contact staff to restart the tablet.');
+        localStorage.removeItem('tableToken');
+        localStorage.removeItem('tableTokenExpiry');
+      } else {
+        setError('Failed to add item to cart. Please try again.');
+      }
+    }
+  };
+
+  const handleRemoveItem = async (itemId: number) => {
+    if (!token) return;
+    try {
+      await removeItem(token, itemId);
+      setError(null);
+    } catch (error: any) {
+      console.error('Failed to remove from cart:', error);
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please contact staff to restart the tablet.');
+      }
     }
   };
 
   const handleCallServer = async () => {
+    if (!token) return;
     try {
-      await callServer(tableNumber);
+      await callServer(token);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error('Failed to call server:', error);
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please contact staff to restart the tablet.');
+      } else {
+        setError('Failed to call server. Please try again.');
+      }
     }
   };
 
   const cartTotal = cart?.total_amount || 0;
   const cartItemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+  // Show error screen if no valid token
+  if (error && !token) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+        <div className="bg-white rounded-xl p-8 max-w-md shadow-lg">
+          <div className="text-red-500 text-6xl mb-4 text-center">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+            Session Not Found
+          </h1>
+          <p className="text-gray-600 text-center mb-6">
+            {error}
+          </p>
+          <div className="text-sm text-gray-500 text-center">
+            This tablet needs to be set up by a staff member.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -83,7 +175,7 @@ const CustomerKiosk: React.FC = () => {
       <div className="bg-white px-6 py-6 shadow-sm sticky top-0 z-50">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-800">
-            Welcome! Table {tableId}
+            Welcome! {tableNumber && `Table ${tableNumber}`}
           </h1>
           <button
             onClick={() => setShowCart(!showCart)}
@@ -93,6 +185,14 @@ const CustomerKiosk: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && token && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 mx-6 mt-4 rounded-lg">
+          <strong className="font-bold">Error: </strong>
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Success Message */}
       {showSuccess && (
@@ -134,8 +234,13 @@ const CustomerKiosk: React.FC = () => {
                       {item.modifiers.map(mod => mod.name).join(', ')}
                     </div>
                   )}
+                  {item.special_instructions && (
+                    <div className="text-sm text-gray-600 mb-2 italic">
+                      Note: {item.special_instructions}
+                    </div>
+                  )}
                   <button
-                    onClick={() => removeItem(tableNumber, item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                     className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                   >
                     Remove
@@ -168,10 +273,10 @@ const CustomerKiosk: React.FC = () => {
 
       {/* Menu Items */}
       <div className="p-6">
-        {Object.entries(groupedByCategory).map(([catId, items]) => (
-          <div key={catId} className="mb-8">
+        {Object.entries(groupedByCategory).map(([catName, items]) => (
+          <div key={catName} className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              {items[0]?.category_id || 'Other Items'}
+              {catName}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {items.filter(item => item.status === 'active').map(item => (

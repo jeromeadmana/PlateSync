@@ -11,18 +11,38 @@ const customerClient = axios.create({
 });
 
 export const customerApi = {
-  getMenu: async (tableId: number): Promise<MenuItem[]> => {
-    const response = await customerClient.get<ApiResponse<MenuItem[]>>(`/menu/${tableId}`);
+  // Create table session token (admin setup)
+  createTableSession: async (tableId: number, hoursValid = 8): Promise<{
+    token: string;
+    tableId: number;
+    tableNumber: string;
+    expiresAt: string;
+  }> => {
+    const response = await customerClient.post<ApiResponse<{
+      token: string;
+      tableId: number;
+      tableNumber: string;
+      expiresAt: string;
+    }>>(`/table-session/${tableId}`, { hoursValid });
     return response.data.data;
   },
 
-  getCart: async (tableId: number): Promise<Cart> => {
-    const response = await customerClient.get<ApiResponse<Cart>>(`/cart/${tableId}`);
+  // Get menu (no token required - public)
+  getMenu: async (storeId: number): Promise<MenuItem[]> => {
+    const response = await customerClient.get<ApiResponse<MenuItem[]>>(`/menu/${storeId}`);
+    return response.data.data;
+  },
+
+  // All cart operations now use token instead of tableId
+  getCart: async (token: string): Promise<Cart> => {
+    const response = await customerClient.get<ApiResponse<Cart>>('/cart', {
+      params: { token }
+    });
     return response.data.data;
   },
 
   addToCart: async (
-    tableId: number,
+    token: string,
     item: {
       menuItemId: number;
       quantity: number;
@@ -31,24 +51,42 @@ export const customerApi = {
     }
   ): Promise<{ itemId: number }> => {
     const response = await customerClient.post<ApiResponse<{ itemId: number }>>(
-      `/cart/${tableId}/items`,
-      item
+      '/cart/items',
+      { ...item, token }
     );
     return response.data.data;
   },
 
-  updateCartItem: async (tableId: number, itemId: number, quantity: number): Promise<void> => {
-    await customerClient.put(`/cart/${tableId}/items/${itemId}`, { quantity });
+  updateCartItem: async (token: string, itemId: number, quantity: number): Promise<void> => {
+    await customerClient.put(`/cart/items/${itemId}`, { quantity, token });
   },
 
-  removeFromCart: async (tableId: number, itemId: number): Promise<void> => {
-    await customerClient.delete(`/cart/${tableId}/items/${itemId}`);
+  removeFromCart: async (token: string, itemId: number): Promise<void> => {
+    await customerClient.delete(`/cart/items/${itemId}`, {
+      params: { token }
+    });
   },
 
-  callServer: async (tableId: number): Promise<{ cartId: number }> => {
+  callServer: async (token: string): Promise<{ cartId: number }> => {
     const response = await customerClient.post<ApiResponse<{ cartId: number }>>(
-      `/cart/${tableId}/call-server`
+      '/cart/call-server',
+      { token }
     );
+    return response.data.data;
+  },
+
+  getCartStatus: async (token: string): Promise<{
+    status: string;
+    itemCount: number;
+    totalAmount: number;
+  }> => {
+    const response = await customerClient.get<ApiResponse<{
+      status: string;
+      itemCount: number;
+      totalAmount: number;
+    }>>('/cart/status', {
+      params: { token }
+    });
     return response.data.data;
   },
 };
